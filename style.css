@@ -23,6 +23,27 @@ h1 {
     border: 2px solid #dee2e6;
 }
 
+#enableButton {
+    padding: 12px 24px;
+    font-size: 16px;
+    cursor: pointer;
+    margin-bottom: 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    transition: background-color 0.3s;
+}
+
+#enableButton:hover:not(:disabled) {
+    background-color: #0056b3;
+}
+
+#enableButton:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+}
+
 #resetButton {
     padding: 8px 16px;
     font-size: 14px;

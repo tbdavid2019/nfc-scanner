@@ -1,3 +1,4 @@
+const enableButton = document.getElementById('enableButton');
 const resetButton = document.getElementById('resetButton');
 const log = document.getElementById('log');
 const status = document.getElementById('status');
@@ -9,12 +10,17 @@ const useApi = false;
 if (!('NDEFReader' in window)) {
     status.textContent = '您的瀏覽器不支援 Web NFC。請在 Android 版 Chrome 中嘗試。';
     status.style.color = 'red';
+    enableButton.style.display = 'none';
 } else {
-    // 建立 NDEFReader 實例並自動開始掃描
+    // 建立 NDEFReader 實例
     const ndef = new NDEFReader();
-    
-    // 頁面載入後自動初始化掃描
-    initNFCScanning();
+    let isScanning = false;
+
+    enableButton.addEventListener('click', async () => {
+        if (!isScanning) {
+            await initNFCScanning();
+        }
+    });
 
     resetButton.addEventListener('click', () => {
         log.textContent = '';
@@ -23,19 +29,27 @@ if (!('NDEFReader' in window)) {
 
     async function initNFCScanning() {
         try {
-            status.textContent = '正在啟動 NFC 掃描器...';
+            status.textContent = '正在請求 NFC 權限...';
             status.style.color = 'orange';
+            enableButton.disabled = true;
             
             await ndef.scan();
-            status.textContent = '請將 NFC 卡片靠近您的裝置';
+            
+            // 權限獲得，掃描已啟動
+            isScanning = true;
+            status.textContent = '✓ NFC 掃描已啟用！請將卡片靠近您的裝置';
             status.style.color = 'green';
+            enableButton.textContent = 'NFC 掃描中...';
+            enableButton.style.backgroundColor = '#28a745';
 
             ndef.onreadingerror = () => {
                 status.textContent = '讀取 NFC 卡片時發生錯誤，請重新嘗試';
                 status.style.color = 'red';
                 setTimeout(() => {
-                    status.textContent = '請將 NFC 卡片靠近您的裝置';
-                    status.style.color = 'green';
+                    if (isScanning) {
+                        status.textContent = '✓ NFC 掃描已啟用！請將卡片靠近您的裝置';
+                        status.style.color = 'green';
+                    }
                 }, 3000);
             };
 
@@ -78,8 +92,14 @@ if (!('NDEFReader' in window)) {
                 }, 2000);
             };
         } catch (error) {
-            status.textContent = `錯誤: ${error}`;
-            status.style.color = 'red';
+            enableButton.disabled = false;
+            if (error.name === 'NotAllowedError') {
+                status.textContent = '❌ NFC 權限被拒絕。請在瀏覽器設定中允許 NFC 權限，然後重新整理頁面。';
+                status.style.color = 'red';
+            } else {
+                status.textContent = `錯誤: ${error.message}`;
+                status.style.color = 'red';
+            }
         }
     }
 }
